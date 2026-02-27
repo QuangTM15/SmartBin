@@ -12,7 +12,7 @@ bool nonRecycleOpen = false;
 unsigned long recycleTimer = 0;
 unsigned long nonRecycleTimer = 0;
 
-// debounce
+// Debounce variables
 unsigned long lastDebounceRecycle = 0;
 unsigned long lastDebounceNonRecycle = 0;
 const unsigned long debounceDelay = 50;
@@ -32,14 +32,45 @@ void initServos()
     pinMode(BUTTON_NONRECYCLE_PIN, INPUT_PULLUP);
 }
 
+// ========================
+// OPEN FUNCTIONS
+// ========================
+
+void openRecycle()
+{
+    // Chỉ mở nếu ngăn kia không mở
+    if (!nonRecycleOpen)
+    {
+        servoRecycle.write(SERVO_OPEN_ANGLE);
+        recycleTimer = millis();
+        recycleOpen = true;
+        Serial.println("Recycle Open");
+    }
+}
+
+void openNonRecycle()
+{
+    if (!recycleOpen)
+    {
+        servoNonRecycle.write(SERVO_OPEN_ANGLE);
+        nonRecycleTimer = millis();
+        nonRecycleOpen = true;
+        Serial.println("NonRecycle Open");
+    }
+}
+
+// ========================
+// HANDLE BUTTONS (Debounce)
+// ========================
+
 void handleButtons()
 {
+    unsigned long currentTime = millis();
+
     int recycleReading = digitalRead(BUTTON_RECYCLE_PIN);
     int nonRecycleReading = digitalRead(BUTTON_NONRECYCLE_PIN);
 
-    unsigned long currentTime = millis();
-
-    // ===== Debounce recycle =====
+    // ---- Debounce Recycle ----
     if (recycleReading != lastRecycleReading)
     {
         lastDebounceRecycle = currentTime;
@@ -49,19 +80,13 @@ void handleButtons()
     {
         if (recycleReading == LOW)
         {
-            if (!nonRecycleOpen)
-            {
-                servoRecycle.write(SERVO_OPEN_ANGLE);
-                recycleTimer = currentTime;
-                recycleOpen = true;
-                Serial.println("Recycle Open");
-            }
+            openRecycle();
         }
     }
 
     lastRecycleReading = recycleReading;
 
-    // ===== Debounce non recycle =====
+    // ---- Debounce NonRecycle ----
     if (nonRecycleReading != lastNonRecycleReading)
     {
         lastDebounceNonRecycle = currentTime;
@@ -71,18 +96,16 @@ void handleButtons()
     {
         if (nonRecycleReading == LOW)
         {
-            if (!recycleOpen)
-            {
-                servoNonRecycle.write(SERVO_OPEN_ANGLE);
-                nonRecycleTimer = currentTime;
-                nonRecycleOpen = true;
-                Serial.println("NonRecycle Open");
-            }
+            openNonRecycle();
         }
     }
 
     lastNonRecycleReading = nonRecycleReading;
 }
+
+// ========================
+// AUTO CLOSE SYSTEM
+// ========================
 
 void updateServos()
 {

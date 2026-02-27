@@ -5,4 +5,7 @@ void initServos();
 void handleButtons();
 void updateServos();
 
+void openRecycle();
+void openNonRecycle();
+
 #endif

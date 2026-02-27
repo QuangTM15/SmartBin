@@ -2,8 +2,7 @@
 #define SERVO_CONTROL_H
 
 void initServos();
-void openRecycleBin();
-void openNonRecycleBin();
-void updateServoState();
+void handleButtons();
+void updateServos();
 
 #endif

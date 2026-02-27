@@ -1,15 +1,15 @@
 #include <Arduino.h>
+#include "servo_control.h"
 
-#define LED_PIN 2  
-
-void setup() {
-    pinMode(LED_PIN, OUTPUT);
+void setup()
+{
+    Serial.begin(9600);
+    initServos();
+    Serial.println("Smart Trash - Servo Test Start");
 }
 
-void loop() {
-    digitalWrite(LED_PIN, HIGH);  // bật LED
-    delay(1000);
-
-    digitalWrite(LED_PIN, LOW);   // tắt LED
-    delay(1000);
+void loop()
+{
+    handleButtons();
+    updateServos();
 }

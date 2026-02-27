@@ -12,6 +12,14 @@ bool nonRecycleOpen = false;
 unsigned long recycleTimer = 0;
 unsigned long nonRecycleTimer = 0;
 
+// debounce
+unsigned long lastDebounceRecycle = 0;
+unsigned long lastDebounceNonRecycle = 0;
+const unsigned long debounceDelay = 50;
+
+int lastRecycleReading = HIGH;
+int lastNonRecycleReading = HIGH;
+
 void initServos()
 {
     servoRecycle.attach(SERVO_RECYCLE_PIN);
@@ -26,18 +34,54 @@ void initServos()
 
 void handleButtons()
 {
-    if (digitalRead(BUTTON_RECYCLE_PIN) == LOW && !recycleOpen)
+    int recycleReading = digitalRead(BUTTON_RECYCLE_PIN);
+    int nonRecycleReading = digitalRead(BUTTON_NONRECYCLE_PIN);
+
+    unsigned long currentTime = millis();
+
+    // ===== Debounce recycle =====
+    if (recycleReading != lastRecycleReading)
     {
-        servoRecycle.write(SERVO_OPEN_ANGLE);
-        recycleTimer = millis();
-        recycleOpen = true;
+        lastDebounceRecycle = currentTime;
     }
-    if (digitalRead(BUTTON_NONRECYCLE_PIN) == LOW && !nonRecycleOpen)
+
+    if ((currentTime - lastDebounceRecycle) > debounceDelay)
     {
-        servoNonRecycle.write(SERVO_OPEN_ANGLE);
-        nonRecycleTimer = millis();
-        nonRecycleOpen = true;
+        if (recycleReading == LOW)
+        {
+            if (!nonRecycleOpen)
+            {
+                servoRecycle.write(SERVO_OPEN_ANGLE);
+                recycleTimer = currentTime;
+                recycleOpen = true;
+                Serial.println("Recycle Open");
+            }
+        }
     }
+
+    lastRecycleReading = recycleReading;
+
+    // ===== Debounce non recycle =====
+    if (nonRecycleReading != lastNonRecycleReading)
+    {
+        lastDebounceNonRecycle = currentTime;
+    }
+
+    if ((currentTime - lastDebounceNonRecycle) > debounceDelay)
+    {
+        if (nonRecycleReading == LOW)
+        {
+            if (!recycleOpen)
+            {
+                servoNonRecycle.write(SERVO_OPEN_ANGLE);
+                nonRecycleTimer = currentTime;
+                nonRecycleOpen = true;
+                Serial.println("NonRecycle Open");
+            }
+        }
+    }
+
+    lastNonRecycleReading = nonRecycleReading;
 }
 
 void updateServos()
@@ -48,11 +92,13 @@ void updateServos()
     {
         servoRecycle.write(SERVO_CLOSE_ANGLE);
         recycleOpen = false;
+        Serial.println("Recycle Closed");
     }
 
     if (nonRecycleOpen && (currentTime - nonRecycleTimer >= AUTO_CLOSE_TIME))
     {
         servoNonRecycle.write(SERVO_CLOSE_ANGLE);
         nonRecycleOpen = false;
+        Serial.println("NonRecycle Closed");
     }
 }

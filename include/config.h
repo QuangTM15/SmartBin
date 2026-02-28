@@ -13,6 +13,10 @@
 #define SERVO_OPEN_ANGLE 90
 #define SERVO_CLOSE_ANGLE 0
 
+// Bluetooth Pins
+#define BT_RX_PIN 6
+#define BT_TX_PIN 7
+
 // Auto close time (ms)
 #define AUTO_CLOSE_TIME 5000
 
